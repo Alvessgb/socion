@@ -1,60 +1,49 @@
-import NextAuth, { type NextAuthConfig } from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/db";
 
-const credentialsProvider = Credentials({
-  id:   "credentials",
-  name: "Test Account",
-  credentials: {
-    username: { label: "Username" },
-    password: { label: "Password", type: "password" },
-  },
-  async authorize(credentials) {
-    const u = credentials?.username as string | undefined;
-    const p = credentials?.password as string | undefined;
-
-    const accounts: Record<string, { email: string; name: string; seed: string }> = {
-      user: { email: "user@socion.test", name: "Gabriel Teste", seed: "gabriel" },
-      zero: { email: "zero@socion.test", name: "Usuário Zero",  seed: "zero" },
-    };
-
-    if (!u || !p || !(u in accounts) || p !== u) return null;
-
-    const acct = accounts[u];
-    const user = await db.user.upsert({
-      where:  { email: acct.email },
-      update: {},
-      create: {
-        email:         acct.email,
-        name:          acct.name,
-        image:         `https://api.dicebear.com/7.x/avataaars/svg?seed=${acct.seed}`,
-        plan:          "TRIAL",
-        trialEndsAt:   new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-        emailVerified: new Date(),
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(db),
+  session: { strategy: "jwt" },
+  secret:  process.env.AUTH_SECRET,
+  providers: [
+    Credentials({
+      id:   "credentials",
+      name: "Test Account",
+      credentials: {
+        username: { label: "Usuário", type: "text" },
+        password: { label: "Senha",   type: "password" },
       },
-    });
+      async authorize(credentials) {
+        const u = credentials?.username as string | undefined;
+        const p = credentials?.password as string | undefined;
+        if (!u || !p) return null;
 
-    return { id: user.id, email: user.email, name: user.name, image: user.image };
-  },
-});
+        const map: Record<string, { email: string; name: string; seed: string }> = {
+          user: { email: "user@socion.test", name: "Gabriel Teste", seed: "gabriel" },
+          zero: { email: "zero@socion.test", name: "Usuário Zero",  seed: "zero"    },
+        };
+        if (!(u in map) || p !== u) return null;
 
-const config: NextAuthConfig = {
-  adapter:  PrismaAdapter(db),
-  session:  { strategy: "jwt" },
-  providers: [credentialsProvider],
-  pages:    { signIn: "/login" },
-  events: {
-    async createUser({ user }) {
-      const existing = await db.user.findUnique({ where: { id: user.id } });
-      if (existing?.plan === "FREE") {
-        await db.user.update({
-          where: { id: user.id },
-          data:  { plan: "TRIAL", trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) },
+        const acct = map[u];
+        const user = await db.user.upsert({
+          where:  { email: acct.email },
+          update: {},
+          create: {
+            email:         acct.email,
+            name:          acct.name,
+            image:         `https://api.dicebear.com/7.x/avataaars/svg?seed=${acct.seed}`,
+            plan:          "TRIAL",
+            trialEndsAt:   new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+            emailVerified: new Date(),
+          },
         });
-      }
-    },
-  },
+        return { id: user.id, email: user.email, name: user.name, image: user.image };
+      },
+    }),
+  ],
+  pages:    { signIn: "/login" },
   callbacks: {
     jwt({ token, user }) {
       if (user?.id) token.id = user.id;
@@ -65,20 +54,5 @@ const config: NextAuthConfig = {
       return session;
     },
   },
-};
-
-// LinkedIn só entra se as vars estiverem configuradas no ambiente
-if (process.env.AUTH_LINKEDIN_ID && process.env.AUTH_LINKEDIN_SECRET) {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const LinkedIn = require("next-auth/providers/linkedin").default;
-  config.providers = [
-    LinkedIn({
-      clientId:     process.env.AUTH_LINKEDIN_ID,
-      clientSecret: process.env.AUTH_LINKEDIN_SECRET,
-      authorization: { params: { scope: "openid profile email" } },
-    }),
-    credentialsProvider,
-  ];
-}
-
-export const { handlers, auth, signIn, signOut } = NextAuth(config);
+  trustHost: true,
+});
