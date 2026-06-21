@@ -20,7 +20,19 @@
       "Bash(npm run *)",
       "Bash(grep -q \"\\\\.env$\" /Users/gabrielalves/Downloads/Socion/.gitignore)",
       "Bash(git init *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(gh auth *)",
+      "Bash(cat /Users/gabrielalves/.npm/_logs/2026-06-21T14_53_25_663Z-eresolve-report.txt | head -30)",
+      "Bash(git remote *)",
+      "Bash(git branch *)",
+      "Bash(git push *)",
+      "Bash(npm list *)",
+      "Bash(npm uninstall *)",
+      "Bash(npm view *)",
+      "Bash(node -e \"const v=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\);const arr=JSON.parse\\(v\\);console.log\\(arr.filter\\(x=>x.startsWith\\('10'\\)\\).slice\\(-5\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(git reset *)",
+      "Bash(git rm *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
