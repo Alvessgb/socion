@@ -1,0 +1,348 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== AUTH.JS ====================
+
+model User {
+  id                     String    @id @default(cuid())
+  name                   String?
+  email                  String    @unique
+  emailVerified          DateTime?
+  image                  String?
+  stripeCustomerId       String?   @unique
+  stripePriceId          String?
+  stripeSubscriptionId   String?   @unique
+  stripeCurrentPeriodEnd DateTime?
+  trialEndsAt            DateTime?
+  plan                   Plan      @default(FREE)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  accounts          Account[]
+  sessions          Session[]
+  profile           Profile?
+  sentLikes         Like[]              @relation("SentLikes")
+  receivedLikes     Like[]              @relation("ReceivedLikes")
+  sentProposals     Proposal[]          @relation("SentProposals")
+  receivedProposals Proposal[]          @relation("ReceivedProposals")
+  partnerships      PartnershipMember[]
+  reviews           Review[]            @relation("ReviewAuthor")
+  reviewsReceived   Review[]            @relation("ReviewTarget")
+}
+
+enum Plan {
+  FREE
+  TRIAL
+  PRO
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ==================== SOCION CORE ====================
+
+model Profile {
+  id              String          @id @default(cuid())
+  userId          String          @unique
+  headline        String?
+  bio             String?         @db.Text
+  city            String?
+  state           String?
+  linkedinUrl     String?
+  linkedinData    Json?
+  pitchVideoUrl   String?
+  availability    Availability    @default(PART_TIME)
+  investmentRange InvestmentRange @default(NONE)
+  trustScore      Float           @default(0)
+  scoreIdentity   Float           @default(0)
+  scoreExperience Float           @default(0)
+  scoreCompetence Float           @default(0)
+  scoreReputation Float           @default(0)
+  scoreCommitment Float           @default(0)
+  kycStatus       KycStatus       @default(PENDING)
+  kycProvider     String?
+  kycReference    String?
+  isVisible       Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills      ProfileSkill[]
+  experiences Experience[]
+  projects    Project[]
+  values      ProfileValues?
+  seeking     Seeking?
+  offering    Offering?
+}
+
+enum Availability {
+  PART_TIME
+  HALF_TIME
+  FULL_TIME
+}
+
+enum InvestmentRange {
+  NONE
+  UP_TO_10K
+  UP_TO_50K
+  ABOVE_50K
+}
+
+enum KycStatus {
+  PENDING
+  IN_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+model ProfileSkill {
+  id        String        @id @default(cuid())
+  profileId String
+  name      String
+  category  SkillCategory
+  level     Int           @default(0)
+  verified  Boolean       @default(false)
+  evidence  String?       @db.Text
+  origin    String?
+  createdAt DateTime      @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+enum SkillCategory {
+  TECHNOLOGY
+  MARKETING
+  PRODUCT
+  SALES
+  OPERATIONS
+  FINANCE
+  LEGAL
+  DESIGN
+  OTHER
+}
+
+model Experience {
+  id          String    @id @default(cuid())
+  profileId   String
+  title       String
+  company     String
+  startDate   DateTime
+  endDate     DateTime?
+  current     Boolean   @default(false)
+  description String?   @db.Text
+  linkedinId  String?
+  createdAt   DateTime  @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model Project {
+  id          String    @id @default(cuid())
+  profileId   String
+  title       String
+  description String?   @db.Text
+  startDate   DateTime?
+  endDate     DateTime?
+  results     String?   @db.Text
+  links       String[]
+  createdAt   DateTime  @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model ProfileValues {
+  id             String @id @default(cuid())
+  profileId      String @unique
+  speedVsPerfect Int    @default(50)
+  riskVsStable   Int    @default(50)
+  growthVsProfit Int    @default(50)
+
+  profile Profile @relation(fields: [profileId], references: [id])
+}
+
+model Seeking {
+  id              String            @id @default(cuid())
+  profileId       String            @unique
+  skills          SkillCategory[]
+  availability    Availability[]
+  investmentRange InvestmentRange[]
+  businessTypes   BusinessType[]
+
+  profile Profile @relation(fields: [profileId], references: [id])
+}
+
+model Offering {
+  id              String          @id @default(cuid())
+  profileId       String          @unique
+  skills          SkillCategory[]
+  availability    Availability
+  investmentRange InvestmentRange
+  businessTypes   BusinessType[]
+
+  profile Profile @relation(fields: [profileId], references: [id])
+}
+
+enum BusinessType {
+  SAAS
+  MARKETPLACE
+  AI
+  ECOMMERCE
+  AGENCY
+  SERVICES
+  OTHER
+}
+
+// ==================== MATCHING ====================
+
+model Like {
+  id         String   @id @default(cuid())
+  fromUserId String
+  toUserId   String
+  createdAt  DateTime @default(now())
+
+  fromUser User @relation("SentLikes", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser   User @relation("ReceivedLikes", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUserId, toUserId])
+}
+
+model Match {
+  id        String   @id @default(cuid())
+  user1Id   String
+  user2Id   String
+  createdAt DateTime @default(now())
+
+  partnership Partnership?
+
+  @@unique([user1Id, user2Id])
+}
+
+// ==================== PARTNERSHIP ====================
+
+model Partnership {
+  id        String            @id @default(cuid())
+  matchId   String            @unique
+  status    PartnershipStatus @default(EXPLORING)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  match      Match               @relation(fields: [matchId], references: [id])
+  members    PartnershipMember[]
+  proposals  Proposal[]
+  milestones Milestone[]
+}
+
+enum PartnershipStatus {
+  EXPLORING
+  PROPOSAL_SENT
+  NEGOTIATING
+  CONTRACT_SIGNED
+  ACTIVE
+  DISSOLVED
+}
+
+model PartnershipMember {
+  id            String   @id @default(cuid())
+  partnershipId String
+  userId        String
+  role          String?
+  equity        Float?
+  joinedAt      DateTime @default(now())
+
+  partnership Partnership @relation(fields: [partnershipId], references: [id])
+  user        User        @relation(fields: [userId], references: [id])
+
+  @@unique([partnershipId, userId])
+}
+
+model Proposal {
+  id             String         @id @default(cuid())
+  partnershipId  String
+  fromUserId     String
+  toUserId       String
+  equity         Float
+  role           String
+  investmentType String[]
+  message        String?        @db.Text
+  status         ProposalStatus @default(SENT)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  partnership Partnership @relation(fields: [partnershipId], references: [id])
+  fromUser    User        @relation("SentProposals", fields: [fromUserId], references: [id])
+  toUser      User        @relation("ReceivedProposals", fields: [toUserId], references: [id])
+}
+
+enum ProposalStatus {
+  SENT
+  VIEWED
+  ACCEPTED
+  REJECTED
+}
+
+model Milestone {
+  id            String    @id @default(cuid())
+  partnershipId String
+  title         String
+  completed     Boolean   @default(false)
+  completedAt   DateTime?
+  order         Int
+  createdAt     DateTime  @default(now())
+
+  partnership Partnership @relation(fields: [partnershipId], references: [id])
+}
+
+// ==================== REPUTATION ====================
+
+model Review {
+  id        String   @id @default(cuid())
+  authorId  String
+  targetId  String
+  score     Int
+  comment   String?  @db.Text
+  context   String?
+  createdAt DateTime @default(now())
+
+  author User @relation("ReviewAuthor", fields: [authorId], references: [id])
+  target User @relation("ReviewTarget", fields: [targetId], references: [id])
+
+  @@unique([authorId, targetId])
+}
