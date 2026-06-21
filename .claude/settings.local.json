@@ -33,7 +33,10 @@
       "Bash(git reset *)",
       "Bash(git rm *)",
       "Bash(git commit -m ' *)",
-      "mcp__Claude_Preview__preview_start"
+      "mcp__Claude_Preview__preview_start",
+      "Bash(vercel ls *)",
+      "Bash(git commit -m 'fix: adiciona .npmrc legacy-peer-deps para build na Vercel *)",
+      "Bash(vercel deploy *)"
     ]
   }
 }
