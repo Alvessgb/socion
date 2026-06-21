@@ -63,16 +63,6 @@
   --radius-xl:   20px;
   --radius-pill: 9999px;
 
-  /* ---- Spacing ---- */
-  --spacing-xxs:  2px;
-  --spacing-xs:   4px;
-  --spacing-sm:   8px;
-  --spacing-md:   12px;
-  --spacing-lg:   16px;
-  --spacing-xl:   24px;
-  --spacing-xxl:  32px;
-  --spacing-huge: 64px;
-
   /* ---- Typography ---- */
   --font-display: "NeueHaasGrotesk Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-sans:    "Inter Variable", Inter, Helvetica, Arial, sans-serif;

@@ -32,7 +32,8 @@
       "Bash(node -e \"const v=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\);const arr=JSON.parse\\(v\\);console.log\\(arr.filter\\(x=>x.startsWith\\('10'\\)\\).slice\\(-5\\).join\\('\\\\n'\\)\\)\")",
       "Bash(git reset *)",
       "Bash(git rm *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "mcp__Claude_Preview__preview_start"
     ]
   }
 }

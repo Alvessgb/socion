@@ -25,7 +25,7 @@ export default function LandingPage() {
           Com confiança.
         </h1>
 
-        <p className="text-body-lg text-[#a1a1aa] max-w-xl">
+        <p className="text-body-lg text-[#a1a1aa] max-w-[560px]">
           SocioN valida competências, histórico e compatibilidade antes de você
           assinar qualquer contrato.
         </p>
