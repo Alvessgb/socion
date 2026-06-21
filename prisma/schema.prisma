@@ -29,6 +29,8 @@ model User {
   profile           Profile?
   sentLikes         Like[]              @relation("SentLikes")
   receivedLikes     Like[]              @relation("ReceivedLikes")
+  matchesAsUser1    Match[]             @relation("MatchUser1")
+  matchesAsUser2    Match[]             @relation("MatchUser2")
   sentProposals     Proposal[]          @relation("SentProposals")
   receivedProposals Proposal[]          @relation("ReceivedProposals")
   partnerships      PartnershipMember[]
@@ -117,12 +119,16 @@ enum Availability {
   PART_TIME
   HALF_TIME
   FULL_TIME
+  CONSULTING
+  INVESTING
 }
 
 enum InvestmentRange {
   NONE
   UP_TO_10K
   UP_TO_50K
+  UP_TO_200K
+  ABOVE_200K
   ABOVE_50K
 }
 
@@ -250,6 +256,8 @@ model Match {
   user2Id   String
   createdAt DateTime @default(now())
 
+  user1       User         @relation("MatchUser1", fields: [user1Id], references: [id])
+  user2       User         @relation("MatchUser2", fields: [user2Id], references: [id])
   partnership Partnership?
 
   @@unique([user1Id, user2Id])

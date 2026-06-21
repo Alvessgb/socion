@@ -23,21 +23,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (
-          credentials?.username !== "user" ||
-          credentials?.password !== "user"
-        ) return null;
+        const u = credentials?.username as string | undefined;
+        const p = credentials?.password as string | undefined;
 
-        // Upsert the test user so it always exists
+        const accounts: Record<string, { email: string; name: string; seed: string }> = {
+          user: { email: "user@socion.test",  name: "Gabriel Teste",  seed: "gabriel" },
+          zero: { email: "zero@socion.test",  name: "Usuário Zero",   seed: "zero" },
+        };
+
+        if (!u || !p || !(u in accounts) || p !== u) return null;
+
+        const acct = accounts[u];
         const user = await db.user.upsert({
-          where:  { email: "user@socion.test" },
+          where:  { email: acct.email },
           update: {},
           create: {
-            email:        "user@socion.test",
-            name:         "Gabriel Teste",
-            image:        "https://api.dicebear.com/7.x/avataaars/svg?seed=gabriel",
-            plan:         "TRIAL",
-            trialEndsAt:  new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+            email:         acct.email,
+            name:          acct.name,
+            image:         `https://api.dicebear.com/7.x/avataaars/svg?seed=${acct.seed}`,
+            plan:          "TRIAL",
+            trialEndsAt:   new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
             emailVerified: new Date(),
           },
         });

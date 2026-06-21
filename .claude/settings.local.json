@@ -36,7 +36,16 @@
       "mcp__Claude_Preview__preview_start",
       "Bash(vercel ls *)",
       "Bash(git commit -m 'fix: adiciona .npmrc legacy-peer-deps para build na Vercel *)",
-      "Bash(vercel deploy *)"
+      "Bash(vercel deploy *)",
+      "Bash(vercel env *)",
+      "mcp__Claude_in_Chrome__navigate",
+      "mcp__Claude_in_Chrome__get_page_text",
+      "mcp__Claude_in_Chrome__find",
+      "mcp__Claude_in_Chrome__javascript_tool",
+      "mcp__Claude_in_Chrome__read_page",
+      "mcp__Claude_in_Chrome__form_input",
+      "mcp__Claude_in_Chrome__browser_batch",
+      "Bash(DATABASE_URL=\"postgresql://neondb_owner:npg_1YLTAeQ6Wyuh@ep-bitter-flower-atx7l0xj-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require\" npx prisma db push)"
     ]
   }
 }
